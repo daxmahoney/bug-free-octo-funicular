@@ -45,3 +45,31 @@ def text_node_to_html_node(text_node: TextNode) -> LeafNode:
             return LeafNode("img", None, {"src": text_node.url, "alt": text_node.text})
         case _:
             raise ValueError("outside the enum class")
+
+def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: TextType) -> list[TextNode]:
+    """
+    node = TextNode("This is text with a `code block` word", TextType.TEXT)
+    new_nodes = split_nodes_delimiter([node], "`", TextType.CODE)
+    """
+    for node in old_nodes:
+        the_string = node.text.split(delimiter)
+        first_node = TextNode(the_string[0], TextType.TEXT)
+        if delimiter == "**":
+            second_node_type = TextType.BOLD
+        elif delimiter == "`":
+            second_node_type = TextType.CODE
+        elif delimiter == "_":
+            second_node_type = TextType.ITALIC
+        else:
+            second_node_type = TextType.TEXT
+
+        second_node = TextNode(the_string[1], second_node_type)
+        third_node = TextNode(the_string[2], TextType.TEXT)
+        new_nodes = [first_node, second_node, third_node]
+        # this is just placeholder
+        return new_nodes
+
+    def extract_markdown_images(text):
+        #returns list of tuplses and images
+
+    
