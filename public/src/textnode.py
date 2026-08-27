@@ -1,5 +1,6 @@
 from enum import Enum
 from htmlnode import LeafNode
+import re
 
 
 class TextType(Enum):
@@ -69,7 +70,80 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
         # this is just placeholder
         return new_nodes
 
-    def extract_markdown_images(text):
-        #returns list of tuplses and images
+def extract_markdown_images(text):
+        #returns list of tuples and images
+    matches = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+    return matches
 
+def extract_markdown_links(text):
+    # returns list of tuples and links
+    matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+    return matches
+
+def split_nodes_image(old_nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes = []
+
+    for old_node in old_nodes:
+        if old_node.text_type != TextType.TEXT:
+            new_nodes.append(old_node)
+            continue
+
+        current_text = old_node.text
+        images = extract_markdown_images(current_text)
+
+        # keep intact if no images
+        if not images:
+            new_nodes.append(old_node)
+            continue
+
+    for image_alt, image_link in images:
+        markdown_str = f"![{image_alt}]({image_link})"
+        sections = current_text.split(markdown_str, 1)
+
+        if len(sections) !=2:
+            continue
+
+        before, after = sections
+        if before:
+            new_nodes.append(TextNode(before, TextType.TEXT))
+        new_nodes.append(TextNode(image_alt, TextType.IMAGE, image_link))
+        current_text = after
+
+    if current_text:
+        new_nodes.append(TextNode(current_text, TextType.TEXT))
+
+    return new_nodes
+
+def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes = []
     
+    for old_node in old_nodes:
+        if old_node.text_type != TextType.TEXT:
+            new_nodes.append(old_node)
+            continue
+    
+        current_text = old_node.text
+        links = extract_markdown_links(current_text)
+    
+            # keep intact if no images
+        if not links:
+            new_nodes.append(old_node)
+            continue
+    
+        for alt_text, link in links:
+            markdown_str = f"[{alt_text}]({link})"
+            sections = current_text.split(markdown_str, 1)
+    
+            if len(sections) !=2:
+                continue
+    
+            before, after = sections
+            if before:
+                new_nodes.append(TextNode(before, TextType.TEXT))
+            new_nodes.append(TextNode(alt_text, TextType.LINK, link))
+            current_text = after
+    
+        if current_text:
+            new_nodes.append(TextNode(current_text, TextType.TEXT))
+    
+        return new_nodes
