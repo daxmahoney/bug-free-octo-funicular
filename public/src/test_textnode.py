@@ -1,6 +1,8 @@
 import unittest
 from textnode import TextNode, TextType, text_node_to_html_node, split_nodes_delimiter
 from textnode import extract_markdown_images, extract_markdown_links, text_to_textnodes, markdown_to_blocks
+from textnode import BlockType, block_to_block_type
+
 
 
 class TestTextNode(unittest.TestCase):
@@ -64,18 +66,18 @@ class TestTextNode(unittest.TestCase):
         TextNode("link", TextType.LINK, "https://yahoo.com"),
     ]
         output = text_to_textnodes(text)
-        print("this is text_splitting_test")
+        #print("this is text_splitting_test")
         self.assertListEqual(gold_answer, output)
 
 
         def test_markdown_to_blocks(self):
             md = """
-This is **bolded** paragraph
+                    This is **bolded** paragraph
 
-This is another paragraph with _italic_ text and `code` here
-This is the same paragraph on a new line
+                    This is another paragraph with _italic_ text and `code` here
+                    This is the same paragraph on a new line
 
-- This is a list
+                    - This is a list
 - with items
 """
             blocks = markdown_to_blocks(md)
@@ -87,6 +89,18 @@ This is the same paragraph on a new line
                 "- This is a list\n- with items",
             ],
         )
+
+    def test_block_to_block_to_markdown_heading(self):
+        md = """##### These are five pound signs #####"""
+        gold_answer = BlockType.HEADING
+        self.assertEqual(block_to_block_type(md), gold_answer)
+
+    def test_block_to_block_to_markdown_code(self):
+        md_code_block = """```
+        I like the smurfs
+        ```"""
+        gold_answer = BlockType.CODE
+        self.assertEqual(block_to_block_type(md_code_block), gold_answer)
 
 if __name__ == "__main__":
     unittest.main()

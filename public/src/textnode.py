@@ -18,6 +18,7 @@ class BlockType(Enum):
     QUOTE = "quote"
     UNORDERED_LIST = "unordered_list"
     ORDERED_LIST = "ordered_list"
+    NORMAL = "normal"
 
 class TextNode():
     def __init__(self, text, text_type, url=None):
@@ -189,16 +190,16 @@ def markdown_to_blocks(markdown):
 def block_to_block_type(markdown):
     #headings
     if re.match(r"^#{1,6}\s", markdown):
-        return "Heading Block"
+        return BlockType.HEADING
     #code blocks
     if markdown.startswith("```\n") and markdown.endswith("```"):
-        return "code block"
+        return BlockType.CODE
     #quote block
     if markdown.startswith(">"):
-        return "quoteblock"
+        return BlockType.QUOTE
     #unordered list
     if markdown.startswith("-"):
-        return "unordered list"
+        return BlockType.UNORDERED_LIST
     #ordered list
     lines = [line for line in markdown.splitlines()]
     for index, line in enumerate(lines):
@@ -208,5 +209,6 @@ def block_to_block_type(markdown):
         if not re.match(pattern, line):
             pass
         else:
-            return "ordered_list"
+            return BlockType.ORDERED_LIST
     #normal paragraph
+    return BlockType.NORMAL
