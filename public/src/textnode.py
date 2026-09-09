@@ -11,6 +11,14 @@ class TextType(Enum):
         LINK = "link"
         IMAGE = "image"
 
+class BlockType(Enum):
+    PARAGRAPH = "paragraph"
+    HEADING = "heading"
+    CODE = "code"
+    QUOTE = "quote"
+    UNORDERED_LIST = "unordered_list"
+    ORDERED_LIST = "ordered_list"
+
 class TextNode():
     def __init__(self, text, text_type, url=None):
         self.text = text
@@ -52,23 +60,32 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
     node = TextNode("This is text with a `code block` word", TextType.TEXT)
     new_nodes = split_nodes_delimiter([node], "`", TextType.CODE)
     """
-    for node in old_nodes:
-        the_string = node.text.split(delimiter)
-        first_node = TextNode(the_string[0], TextType.TEXT)
-        if delimiter == "**":
-            second_node_type = TextType.BOLD
-        elif delimiter == "`":
-            second_node_type = TextType.CODE
-        elif delimiter == "_":
-            second_node_type = TextType.ITALIC
-        else:
-            second_node_type = TextType.TEXT
+    new_nodes = []
 
-        second_node = TextNode(the_string[1], second_node_type)
-        third_node = TextNode(the_string[2], TextType.TEXT)
-        new_nodes = [first_node, second_node, third_node]
-        # this is just placeholder
-        return new_nodes
+    for old_node in old_nodes:
+        if old_node.text_type != TextType.TEXT:
+            new_nodes.append(old_node)
+            continue
+
+        if delimiter not in old_node.text:
+            new_nodes.append(old_node)
+            continue
+
+        parts = old_node.text.split(delimiter)
+
+        if len(parts) % 2 == 0:
+            raise ValueError("malformed markdown")
+
+        for i in range(len(parts)):
+            if parts[i] == "":
+                continue
+
+            if i % 2 == 0:
+                new_nodes.append(TextNode(parts[i], TextType.TEXT))
+            else:
+                new_nodes.append(TextNode(parts[i], text_type))
+       
+    return new_nodes
 
 def extract_markdown_images(text):
         #returns list of tuples and images
@@ -110,7 +127,7 @@ def split_nodes_image(old_nodes: list[TextNode]) -> list[TextNode]:
         current_text = after
 
     if current_text:
-        new_nodes.append(TextNode(current_text, TextType.TEXT))
+            new_nodes.append(TextNode(current_text, TextType.TEXT))
 
     return new_nodes
 
@@ -147,3 +164,49 @@ def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
             new_nodes.append(TextNode(current_text, TextType.TEXT))
     
         return new_nodes
+
+def text_to_textnodes(text):
+    raw_node = TextNode(text, TextType.TEXT)
+    raw_nodes = [raw_node]
+    new_nodes = split_nodes_delimiter(raw_nodes, "**", TextType.BOLD)
+    print(f"After BOLD: {new_nodes}")  # Should be a list
+    new_nodes = split_nodes_delimiter(new_nodes, "`",  TextType.CODE)
+    print(f"After Code: {new_nodes}")  # Should be a list
+    new_nodes = split_nodes_delimiter(new_nodes, "_", TextType.ITALIC)
+    print(f"After italic: {new_nodes}")  # Should be a list
+    new_nodes = split_nodes_image(new_nodes)
+    new_nodes = split_nodes_link(new_nodes) 
+    return new_nodes
+
+def markdown_to_blocks(markdown):
+    large_blocks = markdown.split("\n\n").strip()
+    answer = []
+    for i in large_blocks:
+        if i is not None:
+            answer.append(i)
+    return answer
+
+def block_to_block_type(markdown):
+    #headings
+    if re.match(r"^#{1,6}\s", markdown):
+        return "Heading Block"
+    #code blocks
+    if markdown.startswith("```\n") and markdown.endswith("```"):
+        return "code block"
+    #quote block
+    if markdown.startswith(">"):
+        return "quoteblock"
+    #unordered list
+    if markdown.startswith("-"):
+        return "unordered list"
+    #ordered list
+    lines = [line for line in markdown.splitlines()]
+    for index, line in enumerate(lines):
+        expected_number = index + 1
+        pattern = rf"^{expected_number}\.\s"
+
+        if not re.match(pattern, line):
+            pass
+        else:
+            return "ordered_list"
+    #normal paragraph
