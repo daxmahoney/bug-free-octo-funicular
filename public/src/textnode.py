@@ -4,12 +4,12 @@ import re
 
 
 class TextType(Enum):
-        TEXT = "plain"
-        BOLD = "bold"
-        ITALIC = "italic"
-        CODE = "code"
-        LINK = "link"
-        IMAGE = "image"
+    TEXT = "plain"
+    BOLD = "bold"
+    ITALIC = "italic"
+    CODE = "code"
+    LINK = "link"
+    IMAGE = "image"
 
 class BlockType(Enum):
     PARAGRAPH = "paragraph"
@@ -166,7 +166,7 @@ def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
     
         return new_nodes
 
-def text_to_textnodes(text):
+def text_to_textnodes(text) -> list[TextNode]:
     raw_node = TextNode(text, TextType.TEXT)
     raw_nodes = [raw_node]
     new_nodes = split_nodes_delimiter(raw_nodes, "**", TextType.BOLD)
@@ -212,3 +212,5 @@ def block_to_block_type(markdown):
             return BlockType.ORDERED_LIST
     #normal paragraph
     return BlockType.NORMAL
+
+
