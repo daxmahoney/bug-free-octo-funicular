@@ -1,5 +1,7 @@
 from textnode import block_to_block_type, text_node_to_html_node, \
                      text_to_textnodes, markdown_to_blocks, BlockType
+from textnode import TextNode, TextType
+
 
 
 class HTMLNode():
@@ -61,32 +63,80 @@ def markdown_to_html_node(markdown):
 
     for block in some_blocks:
         block_type = block_to_block_type(block)
+
         if block_type == BlockType.PARAGRAPH:
-            lines = block.split("\n")
-            text = " ".join(lines)
-            lots_of_nodes = text_to_textnodes(text)
-            result_nodes = []
-            for lot in lots_of_nodes:
-                result_nodes.append(text_node_to_html_node(lot))
-            return ParentNode("p", result_nodes)
+            paragraph_block_to_html(block)
+
 
         if block_type == BlockType.HEADING:
-            lines = block.split("\n")
-            first_line = lines[0]
-            count_level = len(first_line) - len(first_line.lstrip('#')) #whole - part_minus_heading = level
+            heading_block_to_html(block)
 
-            text = " ".join(lines)
-            clean_text = text[count_level:].strip()
+        if block_type == BlockType.CODE:
+            code_block_to_html(block)
+        if block_type == BlockType.QUOTE:
+            quote_block_to_html(block)
+        if block_type == BlockType.UNORDERED_LIST:
+            unordered_list_to_html(block)
+        if block_type == BlockType.NORMAL:
+            normal_block_to_html(block)
 
-            lots_of_nodes = text_to_textnodes(clean_text)
-            result_nodes = []
-            for lot in lots_of_nodes:
-                result_nodes.append(text_node_to_html_node(lot))
-            return ParentNode(f"h{count_level}", result_nodes)
+def paragraph_block_to_html(block):
+    lines = block.split("\n")
+    text = " ".join(lines)
+    lots_of_nodes = text_to_textnodes(text)
+    result_nodes = []
+    for lot in lots_of_nodes:
+        result_nodes.append(text_node_to_html_node(lot))
+    return ParentNode("div", result_nodes)
+
+def heading_block_to_html(block):
+    lines = block.split("\n")
+    first_line = lines[0]
+    count_level = len(first_line) - len(first_line.lstrip('#')) #whole - part_minus_heading = level
+
+    text = " ".join(lines)
+    clean_text = text[count_level:].strip()
+
+    lots_of_nodes = text_to_textnodes(clean_text)
+    result_nodes = []
+    for lot in lots_of_nodes:
+        result_nodes.append(text_node_to_html_node(lot))
+    return ParentNode(f"h{count_level}", result_nodes)
+
+def code_block_to_html(block):
+    lines = block.split("\n")
+    if lines[0].startswith("```") or lines[0].startswith("~~~"):
+        content_lines = lines[1:-1]
+        content = '\n'.join(content_lines)
+        content = content + "\n"
+        answer = text_node_to_html_node(TextNode(content, TextType.CODE))
+        
+        another_answer = ParentNode("pre", [answer])
+    return another_answer
+        
+
+
+
+
+
+    
+    
+
 
 
         # Block text → child HTML nodes
         # Block nodes → one parent <div>
+
+"""class BlockType(Enum):
+    PARAGRAPH = "paragraph"
+    HEADING = "heading"
+    CODE = "code"
+    QUOTE = "quote"
+    UNORDERED_LIST = "unordered_list"
+    ORDERED_LIST = "ordered_list"
+    NORMAL = "normal"
+    """
+
 """Next:
 - Finish heading: count only leading # characters
 - Remove "#... " before inline parsing
