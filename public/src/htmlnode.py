@@ -113,6 +113,15 @@ def code_block_to_html(block):
         
         another_answer = ParentNode("pre", [answer])
     return another_answer
+
+    def quote_block_to_html(block):
+        pass
+
+    def unordered_list_to_html(block):
+        pass
+
+    def normal_block_to_html(block):
+        pass
         
 
 
